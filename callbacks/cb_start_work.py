@@ -123,6 +123,7 @@ async def input_recipients(msg: Message, state: FSMContext):
 
 
 async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel: bool = False):
+    config.update_busy()
     count_recipients = len(recipients_or_bookings)
     count = 0
     last_edit_time = 0
@@ -171,6 +172,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
         await asyncio.sleep(delay)
 
     await msg.answer('<b>✅ Рассылка успешно завершена!</b>', parse_mode='html')
+    config.update_busy()
     await send_to_group(f'<b>Пользователь @{msg.from_user.username} разослал {count} гостевых</b>')
 
 
