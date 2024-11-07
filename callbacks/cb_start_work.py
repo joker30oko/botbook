@@ -42,7 +42,13 @@ async def start_working(call: CallbackQuery, state: FSMContext):
 @router_cb_start.message(Startwork.theme)
 async def input_theme(msg: Message, state: FSMContext):
     await state.update_data(theme=msg.text)
-    await msg.answer('<b>📝 Введите текст рассылки(можно с html тегами)</b>', parse_mode='html')
+    await msg.answer(
+        '<b>📝 Введите текст рассылки(можно с html тегами)\n'
+        'Если вы используете режим личная ссылка у каждого,'
+        'используйте {link} в своём тексте, куда будет подставляться ссылка.\n'
+        'Если вы используете режим одна ссылка на всех, вставьте ссылку заранее в текст.</b>',
+        parse_mode='html'
+    )
     await state.set_state(Startwork.text)
 
 
@@ -170,23 +176,24 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
 
 
 async def send_email(subject, html_body, recipient):
-    data = {
-        "sender": {"email": "noreply@wubook.live"},  # Укажите адрес отправителя
-        "to": [{"email": recipient}],  # Адрес получателя
-        "subject": subject,
-        "htmlContent": f"{html_body}"  # Содержимое письма
-    }
+    if '@guest.booking.com' in recipient:
+        data = {
+            "sender": {"email": "noreply@wubook.live"},  # Укажите адрес отправителя
+            "to": [{"email": recipient}],  # Адрес получателя
+            "subject": subject,
+            "htmlContent": f"{html_body}"  # Содержимое письма
+        }
 
-    # Заголовки
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "api-key": api_key
-    }
+        # Заголовки
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": api_key
+        }
 
-    # Отправка запроса
-    response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 201:
-        print(f'Sent to {recipient}')
-    else:
-        print(f'Error: {response.status_code}, {response.text}')
+        # Отправка запроса
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 201:
+            print(f'Sent to {recipient}')
+        else:
+            print(f'Error: {response.status_code}, {response.text}')
