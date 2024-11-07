@@ -85,7 +85,7 @@ async def input_excel(msg: Message, state: FSMContext):
 
         # Сохраняем файл во временное хранилище
         with open('temp.xlsx', 'wb') as f:
-            f.write(content)
+            f.write(content.getvalue())  # Используем getvalue() для получения байтов
 
         # Читаем Excel файл с помощью pandas
         df = pd.read_excel('temp.xlsx')
