@@ -1,3 +1,5 @@
+import requests
+
 def get_remaining_sends(api_key):
     url = "https://api.brevo.com/v3/account"
     
