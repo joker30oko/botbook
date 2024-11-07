@@ -134,9 +134,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
         if is_excel:
             # Если это список бронирований, заменяем {link} на соответствующую ссылку
             current_text = text.replace('{link}', link + item[0])
-            recipient = item[0]  # Получаем email из бронирования
-            print(recipient)
-            print(current_text)
+            recipient = item[1]  # Получаем email из бронирования
         else:
             current_text = text
             recipient = item  # Получаем email напрямую
