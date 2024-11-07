@@ -12,6 +12,7 @@ class BotConfig():
         self.generation = False
         self.error_message = False
         self.count_errors = 0
+        self.busy = False
     
     def update_delay(self, new_delay):
         self.delay = new_delay
@@ -45,7 +46,16 @@ class BotConfig():
             self.generation = False
         else:
             self.generation = True
-            
+
+    def update_busy(self):
+        if self.busy:
+            self.busy = False
+        else:
+            self.busy = True
+
+    def get_busy(self):
+        return self.busy
+        
     def update_error(self, has_error: bool):
         self.error_message = has_error
     
