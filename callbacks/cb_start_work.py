@@ -76,6 +76,7 @@ async def input_link(msg: Message, state: FSMContext):
                      parse_mode='html')
     await state.set_state(Startwork.excel)
 
+
 @router_cb_start.message(Startwork.excel)
 async def input_excel(msg: Message, state: FSMContext):    
     if msg.document:
@@ -87,15 +88,18 @@ async def input_excel(msg: Message, state: FSMContext):
         with open('temp.xlsx', 'wb') as f:
             f.write(content.getvalue())  # Используем getvalue() для получения байтов
 
-        # Читаем Excel файл с помощью pandas
-        df = pd.read_excel('temp.xlsx')
+        # Читаем Excel файл с помощью pandas, пропуская первую строку
+        df = pd.read_excel('temp.xlsx', header=0)  # Указываем, что первая строка - это заголовки
 
+        # Извлекаем данные, начиная со второй строки
         bookings_ids = df['id'].tolist()
         recipients = df['emails'].tolist()
         bookings_list = list(zip(bookings_ids, recipients))
+        
         data = await state.get_data()
         await state.clear()
         await send_to_emails(msg, data, bookings_list, True)
+
 
 @router_cb_start.message(Startwork.recipients)
 async def input_recipients(msg: Message, state: FSMContext):
@@ -131,6 +135,8 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
             # Если это список бронирований, заменяем {link} на соответствующую ссылку
             current_text = text.replace('{link}', link + item[0])
             recipient = item[0]  # Получаем email из бронирования
+            print(recipient)
+            print(current_text)
         else:
             current_text = text
             recipient = item  # Получаем email напрямую
