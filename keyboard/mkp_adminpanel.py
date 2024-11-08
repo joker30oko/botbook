@@ -21,5 +21,9 @@ mkp_panel = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(text='👤 Дать доступ пользователю ',
                              callback_data='admin.setuser')
+    ],
+    [
+        InlineKeyboardButton(text='👤 Узнать количество оставшихся отправок ',
+                             callback_data='admin.getcredits')
     ]
 ])

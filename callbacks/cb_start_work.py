@@ -48,7 +48,8 @@ async def input_theme(msg: Message, state: FSMContext):
         'Если вы используете режим личная ссылка у каждого,'
         'используйте {link} в своём тексте, куда будет подставляться ссылка.\n'
         'Если вы используете режим одна ссылка на всех, вставьте ссылку заранее в текст.</b>',
-        parse_mode='html'
+        parse_mode='html',
+        reply_markup=mkp_cancel
     )
     await state.set_state(Startwork.text)
 
@@ -72,15 +73,15 @@ async def select_choice(callback_query: CallbackQuery, state: FSMContext):
     elif choice == 'choice.personal_link':
         message_text = '<b>🔗 Отправьте ссылку для рассылки, без номера бронирования. \nПример: https://hotelbooking.com/</b>'
         await state.set_state(Startwork.link)
-    await callback_query.message.edit_text(message_text, parse_mode='html')
+    await callback_query.message.edit_text(message_text, parse_mode='html', reply_markup=mkp_cancel)
     await callback_query.answer()
 
 
 @router_cb_start.message(Startwork.link)
 async def input_link(msg: Message, state: FSMContext):
     await state.update_data(link=msg.text)
-    await msg.answer('<b>Отправьте excel файл с бронями, где колонка email это гостевые, а id, это номера бронирования</b>',
-                     parse_mode='html')
+    await msg.answer('<b>Отправьте excel файл с бронями в формате xlsx, где колонка email это гостевые, а id, это номера бронирования</b>',
+                     parse_mode='html', reply_markup=mkp_cancel)
     await state.set_state(Startwork.excel)
 
 
@@ -120,7 +121,10 @@ async def input_recipients(msg: Message, state: FSMContext):
     recipients_list = recipients.strip().split('\n')
     data = await state.get_data()
     await state.clear()
-    await send_to_emails(msg, data, recipients_list)
+    if not config.get_busy():
+        await send_to_emails(msg, data, recipients_list)
+    else:
+        await msg.answer('<b>Бот сейчас занят.</b>', parse_mode='html')
 
 
 async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel: bool = False):

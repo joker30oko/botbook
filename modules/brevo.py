@@ -12,7 +12,6 @@ def get_remaining_sends(api_key):
     
     if response.status_code == 200:
         account_info = response.json()
-        print("Account Information:", account_info)
         
         # Получите количество оставшихся отправок
         remaining_sends = None
