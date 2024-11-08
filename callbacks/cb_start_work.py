@@ -87,7 +87,8 @@ async def input_link(msg: Message, state: FSMContext):
 
 @router_cb_start.message(Startwork.excel)
 async def input_excel(msg: Message, state: FSMContext):
-    try:    
+    bookings_list = []
+    try:
         if msg.document:
             file_id = msg.document.file_id
             file = await bot.get_file(file_id)
@@ -97,20 +98,25 @@ async def input_excel(msg: Message, state: FSMContext):
             with open('temp.xlsx', 'wb') as f:
                 f.write(content.getvalue())  # Используем getvalue() для получения байтов
 
-            # Читаем Excel файл с помощью pandas, пропуская первую строку
+            # Читаем Excel файл с помощью pandas
             df = pd.read_excel('temp.xlsx', header=0)  # Указываем, что первая строка - это заголовки
 
-            # Извлекаем данные, начиная со второй строки
+            # Проверяем наличие необходимых столбцов
+            if 'id' not in df.columns or 'email' not in df.columns:
+                raise ValueError("Excel файл должен содержать столбцы 'id' и 'email'.")
+
+            # Извлекаем данные
             bookings_ids = df['id'].tolist()
             recipients = df['email'].tolist()
             bookings_list = list(zip(bookings_ids, recipients))
-            
-            data = await state.get_data()
-            await state.clear()
-            await send_to_emails(msg, data, bookings_list, True)
     except Exception as e:
-        await msg.answer(e)
+        await msg.answer(f"Произошла ошибка: {str(e)}")
         await state.clear()
+        return
+
+    data = await state.get_data()
+    await state.clear()
+    await send_to_emails(msg, data, bookings_list, True)
 
 
 @router_cb_start.message(Startwork.recipients)
