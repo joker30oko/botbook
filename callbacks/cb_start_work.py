@@ -86,27 +86,30 @@ async def input_link(msg: Message, state: FSMContext):
 
 
 @router_cb_start.message(Startwork.excel)
-async def input_excel(msg: Message, state: FSMContext):    
-    if msg.document:
-        file_id = msg.document.file_id
-        file = await bot.get_file(file_id)
-        content = await bot.download_file(file.file_path)
+async def input_excel(msg: Message, state: FSMContext):
+    try:    
+        if msg.document:
+            file_id = msg.document.file_id
+            file = await bot.get_file(file_id)
+            content = await bot.download_file(file.file_path)
 
-        # Сохраняем файл во временное хранилище
-        with open('temp.xlsx', 'wb') as f:
-            f.write(content.getvalue())  # Используем getvalue() для получения байтов
+            # Сохраняем файл во временное хранилище
+            with open('temp.xlsx', 'wb') as f:
+                f.write(content.getvalue())  # Используем getvalue() для получения байтов
 
-        # Читаем Excel файл с помощью pandas, пропуская первую строку
-        df = pd.read_excel('temp.xlsx', header=0)  # Указываем, что первая строка - это заголовки
+            # Читаем Excel файл с помощью pandas, пропуская первую строку
+            df = pd.read_excel('temp.xlsx', header=0)  # Указываем, что первая строка - это заголовки
 
-        # Извлекаем данные, начиная со второй строки
-        bookings_ids = df['id'].tolist()
-        recipients = df['emails'].tolist()
-        bookings_list = list(zip(bookings_ids, recipients))
-        
-        data = await state.get_data()
-        await state.clear()
-        await send_to_emails(msg, data, bookings_list, True)
+            # Извлекаем данные, начиная со второй строки
+            bookings_ids = df['id'].tolist()
+            recipients = df['emails'].tolist()
+            bookings_list = list(zip(bookings_ids, recipients))
+            
+            data = await state.get_data()
+            await state.clear()
+            await send_to_emails(msg, data, bookings_list, True)
+    except Exception as e:
+        await msg.answer(e)
 
 
 @router_cb_start.message(Startwork.recipients)
