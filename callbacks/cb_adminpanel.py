@@ -44,7 +44,7 @@ async def admin_panel(call: CallbackQuery, state: FSMContext):
             await call.message.edit_text(f'<b>🤖 Вы успешно {"включили" if config.get_generation() else "отключили"} генерацию</b>', parse_mode='html')
     elif call.data == 'admin.getcredits':
         await call.message.edit_text(
-            f'<b>Оставшиеся отправки: {get_remaining_sends(api_key)}</b>',
+            f'<b>Оставшиеся отправки: {await get_remaining_sends(api_key)}</b>',
             parse_mode='html'
         )
     
