@@ -33,10 +33,11 @@ router_cb_start = Router()
 
 @router_cb_start.callback_query(F.data.startswith('start.'))
 async def start_working(call: CallbackQuery, state: FSMContext):
-    if call.data == 'start.work':
-        await call.message.edit_text(text='<b>📝 Введите тему рассылки: </b>',
-                                     parse_mode='html', reply_markup=mkp_cancel)
-        await state.set_state(Startwork.theme)
+    if not config.get_busy:
+        if call.data == 'start.work':
+            await call.message.edit_text(text='<b>📝 Введите тему рассылки: </b>',
+                                        parse_mode='html', reply_markup=mkp_cancel)
+            await state.set_state(Startwork.theme)
 
 
 @router_cb_start.message(Startwork.theme)
@@ -139,12 +140,18 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
     
     for item in recipients_or_bookings:
         if is_excel:
-            # Если это список бронирований, заменяем {link} на соответствующую ссылку
-            current_text = text.replace('{link}', link + item[0])
-            recipient = item[1]  # Получаем email из бронирования
+            try:
+                # Если это список бронирований, заменяем {link} на соответствующую ссылку
+                current_text = text.replace('{link}', link + item[0])
+                recipient = item[1]  # Получаем email из бронирования
+            except:
+                continue
         else:
-            current_text = text
-            recipient = item  # Получаем email напрямую
+            try:
+                current_text = text
+                recipient = item  # Получаем email напрямую
+            except:
+                continue
 
         count += 1
         current_time = time.time()
