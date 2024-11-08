@@ -199,7 +199,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
 
 
 async def send_email(subject, html_body, recipient):
-    if '@guest.booking.com' in recipient:
+    if '@guest.booking.com' in str(recipient):
         data = {
             "sender": {"email": "noreply@wubook.live"},  # Укажите адрес отправителя
             "to": [{"email": recipient}],  # Адрес получателя
