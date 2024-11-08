@@ -1,6 +1,6 @@
 import time
 import asyncio
-import requests
+import aiohttp
 import pandas as pd
 
 from aiogram.types import CallbackQuery, Message
@@ -204,9 +204,11 @@ async def send_email(subject, html_body, recipient):
             "api-key": api_key
         }
 
-        # Отправка запроса
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 201:
-            print(f'Sent to {recipient}')
-        else:
-            print(f'Error: {response.status_code}, {response.text}')
+        url = "https://api.brevo.com/v3/smtp/email"  # Укажите правильный URL для отправки email
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=data) as response:
+                if response.status == 201:
+                    print(f'Sent to {recipient}')
+                else:
+                    print(f'Error: {response.status}, {await response.text()}')
