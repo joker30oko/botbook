@@ -33,7 +33,7 @@ router_cb_start = Router()
 
 @router_cb_start.callback_query(F.data.startswith('start.'))
 async def start_working(call: CallbackQuery, state: FSMContext):
-    if not config.get_busy:
+    if not config.get_busy():
         if call.data == 'start.work':
             await call.message.edit_text(text='<b>📝 Введите тему рассылки: </b>',
                                         parse_mode='html', reply_markup=mkp_cancel)
