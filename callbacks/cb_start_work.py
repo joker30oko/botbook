@@ -102,7 +102,7 @@ async def input_excel(msg: Message, state: FSMContext):
 
             # Извлекаем данные, начиная со второй строки
             bookings_ids = df['id'].tolist()
-            recipients = df['emails'].tolist()
+            recipients = df['email'].tolist()
             bookings_list = list(zip(bookings_ids, recipients))
             
             data = await state.get_data()
@@ -110,6 +110,7 @@ async def input_excel(msg: Message, state: FSMContext):
             await send_to_emails(msg, data, bookings_list, True)
     except Exception as e:
         await msg.answer(e)
+        await state.clear()
 
 
 @router_cb_start.message(Startwork.recipients)
