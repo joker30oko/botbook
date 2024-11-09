@@ -14,6 +14,7 @@ from keyboard.mkp_choice import mkp_choice
 from external.messages import send_to_group
 from bot_create import bot, api_key
 from modules.randomize_msg import generate_variations
+from modules.brevo import get_account_status
 
 
 url = "https://api.brevo.com/v3/smtp/email"
@@ -138,6 +139,8 @@ async def input_recipients(msg: Message, state: FSMContext):
 
 
 async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel: bool = False):
+    if not get_account_status(api_key, False):
+        return await msg.answer(f'<b>FATAL ERROR: SERVICE IS SHUTDOWN</b>', parse_mode='html')
     config.update_busy()
     count_recipients = len(recipients_or_bookings)
     count = 0
