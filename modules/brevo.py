@@ -28,5 +28,3 @@ async def get_account_status(api_key, text=True):
                     return status_service
             else:
                 return f"Ошибка: {response.status}, {await response.text()}"
-            
-async 
