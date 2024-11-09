@@ -1,6 +1,6 @@
 import aiohttp
 
-async def get_account_status(api_key):
+async def get_account_status(api_key, text=True):
     url = "https://api.brevo.com/v3/account"
     
     headers = {
@@ -22,6 +22,11 @@ async def get_account_status(api_key):
                         break
                 if not account_info.get('relay', {}).get('enabled', False):
                     status_service = False
-                return f'Количество оставшихся отправок: {remaining_sends}. Статус сервера: {status_service}'
+                if text:
+                    return f'Количество оставшихся отправок: {remaining_sends}. Статус сервера: {status_service}'
+                else:
+                    return status_service
             else:
                 return f"Ошибка: {response.status}, {await response.text()}"
+            
+async 
