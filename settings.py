@@ -1,10 +1,10 @@
-EDIT_MSG_DELAY = 5
+EDIT_MSG_DELAY = 2
 error_message = False
 MSG_FATAL_ERRORS = ['5.7.9 Please log in with your web browser and then try again', ]
 
 
 class BotConfig():
-    def __init__(self, delay=2):
+    def __init__(self, delay=0):
         self.delay = delay
         self.admins = [7777020653]
         self.users = []

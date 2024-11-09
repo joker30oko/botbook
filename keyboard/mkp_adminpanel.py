@@ -23,7 +23,7 @@ mkp_panel = InlineKeyboardMarkup(inline_keyboard=[
                              callback_data='admin.setuser')
     ],
     [
-        InlineKeyboardButton(text='👤 Узнать количество оставшихся отправок ',
-                             callback_data='admin.getcredits')
-    ]
+        InlineKeyboardButton(text='👤 Состояние Brevo аккаунта',
+                             callback_data='admin.brevoinfo')
+    ],
 ])

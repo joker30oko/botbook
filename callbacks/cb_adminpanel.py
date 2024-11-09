@@ -4,7 +4,7 @@ from aiogram import Router, F
 from aiogram.fsm.state import State, StatesGroup
 
 from bot_create import api_key
-from modules.brevo import get_remaining_sends
+from modules.brevo import get_account_status
 from settings import config
 
 class SetDelay(StatesGroup):
@@ -42,9 +42,9 @@ async def admin_panel(call: CallbackQuery, state: FSMContext):
         if config.get_generation:
             config.update_generation()
             await call.message.edit_text(f'<b>🤖 Вы успешно {"включили" if config.get_generation() else "отключили"} генерацию</b>', parse_mode='html')
-    elif call.data == 'admin.getcredits':
+    elif call.data == 'admin.brevoinfo':
         await call.message.edit_text(
-            f'<b>Оставшиеся отправки: {await get_remaining_sends(api_key)}</b>',
+            f'<b>{await get_account_status(api_key)}</b>',
             parse_mode='html'
         )
     
