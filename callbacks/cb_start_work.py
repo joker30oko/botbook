@@ -139,7 +139,7 @@ async def input_recipients(msg: Message, state: FSMContext):
 
 
 async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel: bool = False):
-    if not get_account_status(api_key, False):
+    if not await get_account_status(api_key, False):
         return await msg.answer(f'<b>FATAL ERROR: SERVICE IS SHUTDOWN</b>', parse_mode='html')
     config.update_busy()
     count_recipients = len(recipients_or_bookings)
