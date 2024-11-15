@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from settings import config, EDIT_MSG_DELAY
-from keyboard.mkp_cancel import mkp_cancel
+from keyboard.mkp_cancel import mkp_cancel, mkp_cancel_sender
 from keyboard.mkp_choice import mkp_choice
 from external.messages import send_to_group
 from bot_create import bot, api_key
@@ -145,17 +145,22 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
     count_recipients = len(recipients_or_bookings)
     count = 0
     last_edit_time = 0
+    tasks = []  # Список задач для отправки писем
 
     theme = data['theme']
     text = str(data['text'])
     link = data.get('link', '')  # Получаем ссылку, если она есть
 
     delay = config.get_delay()
+    await send_to_group(f'<b>Пользователь @{msg.from_user.username} начал рассылку {count_recipients} гостевых</b>')
     message_count = await msg.answer(f'<b>⌛️ Начинаем рассылку! Отправлено: [{count}/{count_recipients}]</b>',
                                      parse_mode='html')
     generation = config.get_generation()
     
     for item in recipients_or_bookings:
+        if config.get_cancelled():
+            config.update_cancelled()
+            break
         if is_excel:
             try:
                 # Если это список бронирований, заменяем {link} на соответствующую ссылку
@@ -188,12 +193,14 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
                 f'\n🤖 Генерация: {"включена" if generation else "выключена"}'
                 f'\n✅ Отправлено: [{count}/{count_recipients}]'
                 f'\n🚫 Ошибок во время отправки: {config.get_count_errors()}</b>',
-                parse_mode='html'
+                parse_mode='html',
+                reply_markup=mkp_cancel_sender
             )
             last_edit_time = current_time
 
-        await send_email(generate_theme, generate_text, recipient)
+        tasks.append(send_email(generate_theme, generate_text, recipient))
         await asyncio.sleep(delay)
+    await asyncio.gather(*tasks)
 
     await msg.answer('<b>✅ Рассылка успешно завершена!</b>', parse_mode='html')
     config.update_busy()

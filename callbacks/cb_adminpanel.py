@@ -30,9 +30,6 @@ async def admin_panel(call: CallbackQuery, state: FSMContext):
     elif call.data == 'admin.setadmin':
         await call.message.edit_text(f'<b>✅ Введите айди нового администратора: </b>', parse_mode='html')
         await state.set_state(SetAdmin.setadmin)
-    elif call.data == 'admin.setuser':
-        await call.message.edit_text(f'<b>✅ Введите айди нового пользователя: </b>', parse_mode='html')
-        await state.set_state(SetUser.setuser)
     elif call.data == 'admin.setcount':
         count_messages = config.get_count_messages()
         await call.message.edit_text(f'<b>Текущее количество на 1 аккаунт: {count_messages}'

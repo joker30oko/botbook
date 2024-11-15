@@ -13,6 +13,7 @@ class BotConfig():
         self.error_message = False
         self.count_errors = 0
         self.busy = False
+        self.cancelled = False
     
     def update_delay(self, new_delay):
         self.delay = new_delay
@@ -64,6 +65,15 @@ class BotConfig():
     
     def get_count_errors(self):
         return self.count_errors
+    
+    def get_cancelled(self):
+        return self.cancelled
+    
+    def update_cancelled(self):
+        if self.cancelled:
+            self.cancelled = False
+        else:
+            self.cancelled = True
 
 
 config = BotConfig()
