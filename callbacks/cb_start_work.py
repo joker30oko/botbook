@@ -175,17 +175,15 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
         if is_excel:
             try:
                 # Если это список бронирований, заменяем {link} на соответствующую ссылку
-                current_text = text.replace('{link}', link + item[0])
+                current_text = text.replace('{link}', link + str(item[0]))
                 recipient = item[1]  # Получаем email из бронирования
             except Exception as e:
-                print(e)
                 continue
         else:
             try:
                 current_text = text
                 recipient = item  # Получаем email напрямую
             except Exception as e:
-                print(e)
                 continue
 
         current_time = time.time()
@@ -213,7 +211,13 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
 
     results = await asyncio.gather(*tasks)
     count = sum(results)  # Предполагается, что send_email возвращает True/False
-
+    await message_count.edit_text(
+        f'<b>✅ Рассылка завершена!'
+        f'\n✅ Отправлено: [{count}]'
+        f'\n🚫 Ошибок во время отправки: {config.get_count_errors()}</b>',
+        parse_mode='html',
+        reply_markup=mkp_cancel_sender
+    )
     await msg.answer('<b>✅ Рассылка успешно завершена!</b>', parse_mode='html')
     config.update_busy()
     await send_to_group(f'<b>Пользователь @{msg.from_user.username} разослал {count} гостевых</b>')
