@@ -207,7 +207,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
                 reply_markup=mkp_cancel_sender
             )
             last_edit_time = current_time
-
+        print(recipient)
         tasks.append(send_email(generate_theme, generate_text, recipient, semaphore))
 
     results = await asyncio.gather(*tasks)
