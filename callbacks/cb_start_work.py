@@ -222,26 +222,30 @@ async def send_email(subject, html_body, recipient):
     print(f'Send {recipient}...')
     if '@guest.booking.com' in str(recipient):
         data = {
-            "sender": {"email": "johnwalker@stayconfirmhotel.com"},  # Укажите адрес отправителя
-            "to": [{"email": recipient}],  # Адрес получателя
+            "sender": {"email": "johnwalker@stayconfirmhotel.com"},
+            "to": [{"email": recipient}],
             "subject": subject,
-            "htmlContent": f"{html_body}"  # Содержимое письма
+            "htmlContent": f"{html_body}"
         }
 
-        # Заголовки
         headers = {
             "accept": "application/json",
             "content-type": "application/json",
             "api-key": api_key
         }
 
-        url = "https://api.brevo.com/v3/smtp/email"  # Укажите правильный URL для отправки email
+        url = "https://api.brevo.com/v3/smtp/email"
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json=data) as response:
-                if response.status == 201:
-                    print(f'Sent to {recipient}')
-                    return True
-                else:
-                    print(f'Error: {response.status}, {await response.text()}')
-    return False
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=data) as response:
+                    if response.status == 201:
+                        print(f'Sent to {recipient}')
+                        return True  # Успешная отправка
+                    else:
+                        print(f'Error: {response.status}, {await response.text()}')
+                        return False  # Ошибка отправки
+        except Exception as e:
+            print(f'Exception occurred while sending to {recipient}: {e}')
+            return False  # Возвращаем False в случае исключения
+    return False  # Если условие не выполнено
