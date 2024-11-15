@@ -219,6 +219,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
 
 
 async def send_email(subject, html_body, recipient):
+    print(f'Send {recipient}...')
     if '@guest.booking.com' in str(recipient):
         data = {
             "sender": {"email": "johnwalker@stayconfirmhotel.com"},  # Укажите адрес отправителя
