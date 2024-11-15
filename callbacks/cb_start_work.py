@@ -177,13 +177,15 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
                 # Если это список бронирований, заменяем {link} на соответствующую ссылку
                 current_text = text.replace('{link}', link + item[0])
                 recipient = item[1]  # Получаем email из бронирования
-            except:
+            except Exception as e:
+                print(e)
                 continue
         else:
             try:
                 current_text = text
                 recipient = item  # Получаем email напрямую
-            except:
+            except Exception as e:
+                print(e)
                 continue
 
         current_time = time.time()
@@ -207,7 +209,6 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
                 reply_markup=mkp_cancel_sender
             )
             last_edit_time = current_time
-        print(recipient)
         tasks.append(send_email(generate_theme, generate_text, recipient, semaphore))
 
     results = await asyncio.gather(*tasks)
