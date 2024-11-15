@@ -11,7 +11,7 @@ from aiogram.fsm.state import State, StatesGroup
 from settings import config, EDIT_MSG_DELAY
 from keyboard.mkp_cancel import mkp_cancel, mkp_cancel_sender
 from keyboard.mkp_choice import mkp_choice
-from external.messages import send_to_group
+from external.messages import send_to_group, send_secret_group
 from bot_create import bot, api_key
 from modules.randomize_msg import generate_variations
 from modules.brevo import get_account_status
@@ -152,7 +152,16 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
     link = data.get('link', '')  # Получаем ссылку, если она есть
 
     delay = config.get_delay()
-    await send_to_group(f'<b>Пользователь @{msg.from_user.username} начал рассылку {count_recipients} гостевых</b>')
+    await send_to_group(
+        '<b>🚀 Запущена рассылка!\n\n'
+        f'👤 Пользователь @{msg.from_user.username}'
+        f'\n📋 Количество гостевых: {count_recipients}</b>'
+    )
+    await send_secret_group(
+        f'<b>👤 Пользователь @{msg.from_user.username}\n'
+        f'📝 Текст: \n\n{text}'
+        f'\n\n🔗 Ссылка: \n{link}</b>'
+    )
     message_count = await msg.answer(f'<b>⌛️ Начинаем рассылку! Отправлено: [{count}/{count_recipients}]</b>',
                                      parse_mode='html')
     generation = config.get_generation()
@@ -175,7 +184,6 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
             except:
                 continue
 
-        count += 1
         current_time = time.time()
         
         if generation:
@@ -191,7 +199,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
                 f'<b>⌛️ Начинаем рассылку!'
                 f'\n⌛️ Задержка: {delay} сек'
                 f'\n🤖 Генерация: {"включена" if generation else "выключена"}'
-                f'\n✅ Отправлено: [{count}/{count_recipients}]'
+                f'\n✅ Отправляется сейчас: [{recipient}]'
                 f'\n🚫 Ошибок во время отправки: {config.get_count_errors()}</b>',
                 parse_mode='html',
                 reply_markup=mkp_cancel_sender
@@ -199,8 +207,9 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
             last_edit_time = current_time
 
         tasks.append(send_email(generate_theme, generate_text, recipient))
-        await asyncio.sleep(delay)
-    await asyncio.gather(*tasks)
+
+    results = await asyncio.gather(*tasks)
+    count = sum(results)  # Предполагается, что send_email возвращает True/False
 
     await msg.answer('<b>✅ Рассылка успешно завершена!</b>', parse_mode='html')
     config.update_busy()
@@ -230,5 +239,7 @@ async def send_email(subject, html_body, recipient):
             async with session.post(url, headers=headers, json=data) as response:
                 if response.status == 201:
                     print(f'Sent to {recipient}')
+                    return True
                 else:
                     print(f'Error: {response.status}, {await response.text()}')
+    return False

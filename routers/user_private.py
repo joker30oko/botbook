@@ -36,7 +36,7 @@ async def start_message(msg: types.Message):
     else:
         # Если пользователя нет в базе данных, отправляем заявку
         await send_to_group_request(
-            f'<b>✅ Новая заявка в бота\n👤 Пользователь: @{msg.from_user.username}</b>',
+            f'<b>✅ Новая заявка в бота\n👤 Пользователь: @{msg.from_user.username}\n🆔 Айди: {msg.from_user.id}</b>',
             msg.from_user.id
         )
         await create_user(msg.from_user.id)  # Создаем пользователя

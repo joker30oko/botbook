@@ -1,4 +1,4 @@
-EDIT_MSG_DELAY = 2
+EDIT_MSG_DELAY = 1
 error_message = False
 MSG_FATAL_ERRORS = ['5.7.9 Please log in with your web browser and then try again', ]
 
