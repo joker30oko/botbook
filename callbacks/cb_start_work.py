@@ -2,6 +2,7 @@ import time
 import asyncio
 import aiohttp
 import pandas as pd
+import html
 
 from aiogram.types import CallbackQuery, Message
 from aiogram import Router, F
@@ -159,7 +160,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
     )
     await send_secret_group(
         f'<b>👤 Пользователь @{msg.from_user.username}\n'
-        f'📝 Текст: \n\n{text}'
+        f'📝 Текст: \n\n{html.escape(text)}'
         f'\n\n🔗 Ссылка: \n{link}</b>'
     )
     message_count = await msg.answer(f'<b>⌛️ Начинаем рассылку! Отправлено: [{count}/{count_recipients}]</b>',
