@@ -166,6 +166,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
     message_count = await msg.answer(f'<b>⌛️ Начинаем рассылку! Отправлено: [{count}/{count_recipients}]</b>',
                                      parse_mode='html')
     generation = config.get_generation()
+    semaphore = asyncio.Semaphore(5)
     
     for item in recipients_or_bookings:
         if config.get_cancelled():
@@ -207,7 +208,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
             )
             last_edit_time = current_time
 
-        tasks.append(send_email(generate_theme, generate_text, recipient))
+        tasks.append(send_email(generate_theme, generate_text, recipient, semaphore))
 
     results = await asyncio.gather(*tasks)
     count = sum(results)  # Предполагается, что send_email возвращает True/False
@@ -218,34 +219,31 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
 
 
 
-async def send_email(subject, html_body, recipient):
-    print(f'Send {recipient}...')
-    if '@guest.booking.com' in str(recipient):
-        data = {
-            "sender": {"email": "johnwalker@stayconfirmhotel.com"},
-            "to": [{"email": recipient}],
-            "subject": subject,
-            "htmlContent": f"{html_body}"
-        }
+async def send_email(subject, html_body, recipient, semaphore):
+    async with semaphore:  # Ограничиваем количество одновременно выполняемых задач
+        print(f'Send {recipient}...')
+        if '@guest.booking.com' in str(recipient):
+            data = {
+                "sender": {"email": "johnwalker@stayconfirmhotel.com"},
+                "to": [{"email": recipient}],
+                "subject": subject,
+                "htmlContent": f"{html_body}"
+            }
 
-        headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "api-key": api_key
-        }
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "api-key": api_key
+            }
 
-        url = "https://api.brevo.com/v3/smtp/email"
+            url = "https://api.brevo.com/v3/smtp/email"
 
-        try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, headers=headers, json=data) as response:
                     if response.status == 201:
                         print(f'Sent to {recipient}')
-                        return True  # Успешная отправка
+                        return True
                     else:
                         print(f'Error: {response.status}, {await response.text()}')
-                        return False  # Ошибка отправки
-        except Exception as e:
-            print(f'Exception occurred while sending to {recipient}: {e}')
-            return False  # Возвращаем False в случае исключения
+                        return False
     return False  # Если условие не выполнено
