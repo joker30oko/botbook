@@ -19,10 +19,6 @@ mkp_panel = InlineKeyboardMarkup(inline_keyboard=[
                              callback_data='admin.setadmin')
     ],
     [
-        InlineKeyboardButton(text='👤 Дать доступ пользователю ',
-                             callback_data='admin.setuser')
-    ],
-    [
         InlineKeyboardButton(text='👤 Состояние Brevo аккаунта',
                              callback_data='admin.brevoinfo')
     ],

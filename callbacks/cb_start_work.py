@@ -49,7 +49,8 @@ async def input_theme(msg: Message, state: FSMContext):
         '<b>📝 Введите текст рассылки(можно с html тегами)\n'
         'Если вы используете режим личная ссылка у каждого,'
         'используйте {link} в своём тексте, куда будет подставляться ссылка.\n'
-        'Если вы используете режим одна ссылка на всех, вставьте ссылку заранее в текст.</b>',
+        'Если вы используете режим одна ссылка на всех, вставьте ссылку заранее в текст.'
+        '\nЕсли вы используете режим одна ссылка для ввода номера бронирования, введите в текст {number} куда будет подставляться номер брони.</b>',
         parse_mode='html',
         reply_markup=mkp_cancel
     )
@@ -57,7 +58,7 @@ async def input_theme(msg: Message, state: FSMContext):
 
 
 @router_cb_start.message(Startwork.text)
-async def input_theme(msg: Message, state: FSMContext):
+async def input_choice(msg: Message, state: FSMContext):
     await state.update_data(text=msg.text)
     await msg.answer('<b>Выберите вариант рассылки</b>',
                      reply_markup=mkp_choice,
@@ -69,12 +70,22 @@ async def input_theme(msg: Message, state: FSMContext):
 async def select_choice(callback_query: CallbackQuery, state: FSMContext):
     choice = callback_query.data
     message_text = ''
+    
+    # Сбрасываем состояние перед установкой нового
+    await state.update_data(is_excel=False, is_booking_number=False)
+
     if choice == 'choice.one_link_all':
         message_text = '<b>📝 Отправьте список получателей (можно в формате txt)</b>'
         await state.set_state(Startwork.recipients)
     elif choice == 'choice.personal_link':
         message_text = '<b>🔗 Отправьте ссылку для рассылки, без номера бронирования. \nПример: https://hotelbooking.com/</b>'
         await state.set_state(Startwork.link)
+        await state.update_data(one_to_one=True)  # Устанавливаем только is_excel
+    elif choice == 'choice.number_booking':
+        message_text = '<b>🔗 Отправьте ссылку для рассылки, где будет вводится номер бронирования. \nПример: https://hotelbooking.com/reservation/</b>'
+        await state.set_state(Startwork.link)
+        await state.update_data(is_booking_number=True)  # Устанавливаем только is_booking_number
+
     await callback_query.message.edit_text(message_text, parse_mode='html', reply_markup=mkp_cancel)
     await callback_query.answer()
 
@@ -118,7 +129,11 @@ async def input_excel(msg: Message, state: FSMContext):
 
     data = await state.get_data()
     await state.clear()
-    await send_to_emails(msg, data, bookings_list, True)
+
+    one_to_one = data.get('one_to_one', False)
+    is_booking_number = data.get('is_booking_number', False)
+
+    await send_to_emails(msg, data, bookings_list, one_to_one, is_booking_number)
 
 
 @router_cb_start.message(Startwork.recipients)
@@ -139,7 +154,7 @@ async def input_recipients(msg: Message, state: FSMContext):
         await msg.answer('<b>Бот сейчас занят.</b>', parse_mode='html')
 
 
-async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel: bool = False):
+async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_one: bool = False, is_booking_number: bool = False):
     if not await get_account_status(api_key, False):
         return await msg.answer(f'<b>FATAL ERROR: SERVICE IS SHUTDOWN</b>', parse_mode='html')
     config.update_busy()
@@ -172,10 +187,16 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
         if config.get_cancelled():
             config.update_cancelled()
             break
-        if is_excel:
+        if one_to_one:
             try:
                 # Если это список бронирований, заменяем {link} на соответствующую ссылку
                 current_text = text.replace('{link}', link + str(item[0]))
+                recipient = item[1]  # Получаем email из бронирования
+            except Exception as e:
+                continue
+        elif is_booking_number:
+            try:
+                current_text = text.replace('{number}', str(item[0]))
                 recipient = item[1]  # Получаем email из бронирования
             except Exception as e:
                 continue
@@ -213,7 +234,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
     count = sum(results)  # Предполагается, что send_email возвращает True/False
     await message_count.edit_text(
         f'<b>✅ Рассылка завершена!'
-        f'\n✅ Отправлено: [{count}]'
+        f'\n✅ Отправлено: [{count}/{count_recipients}]'
         f'\n🚫 Ошибок во время отправки: {config.get_count_errors()}</b>',
         parse_mode='html',
         reply_markup=mkp_cancel_sender
@@ -226,7 +247,6 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, is_excel
 
 async def send_email(subject, html_body, recipient, semaphore):
     async with semaphore:  # Ограничиваем количество одновременно выполняемых задач
-        print(f'Send {recipient}...')
         if '@guest.booking.com' in str(recipient):
             data = {
                 "sender": {"email": "johnwalker@stayconfirmhotel.com"},
