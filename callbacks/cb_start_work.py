@@ -82,8 +82,8 @@ async def select_choice(callback_query: CallbackQuery, state: FSMContext):
         await state.set_state(Startwork.link)
         await state.update_data(one_to_one=True)  # Устанавливаем только is_excel
     elif choice == 'choice.number_booking':
-        message_text = '<b>🔗 Отправьте ссылку для рассылки, где будет вводится номер бронирования. \nПример: https://hotelbooking.com/reservation/</b>'
-        await state.set_state(Startwork.link)
+        message_text = '<b>Отправьте excel файл с бронями в формате xlsx, где колонка email это гостевые, а id, это номера бронирования</b>'
+        await state.set_state(Startwork.excel)
         await state.update_data(is_booking_number=True)  # Устанавливаем только is_booking_number
 
     await callback_query.message.edit_text(message_text, parse_mode='html', reply_markup=mkp_cancel)
@@ -236,8 +236,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
         f'<b>✅ Рассылка завершена!'
         f'\n✅ Отправлено: [{count}/{count_recipients}]'
         f'\n🚫 Ошибок во время отправки: {config.get_count_errors()}</b>',
-        parse_mode='html',
-        reply_markup=mkp_cancel_sender
+        parse_mode='html'
     )
     await msg.answer('<b>✅ Рассылка успешно завершена!</b>', parse_mode='html')
     config.update_busy()
