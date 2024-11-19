@@ -1,7 +1,7 @@
 # db/create_db.py
 
 import logging
-from sqlalchemy import Column, Integer, Boolean
+from sqlalchemy import Column, Integer, Boolean, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -58,3 +58,10 @@ async def get_user_by_telegram_id(telegram_id: int):
     async with AsyncSessionLocal() as session:
         user = await session.get(User, telegram_id)  # Получаем пользователя по telegram_id
         return user  # Возвращаем пользователя или None, если не найден
+    
+    
+async def get_all_telegram_ids():
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User.telegram_id))  # Выполняем запрос для получения всех telegram_id
+        telegram_ids = result.scalars().all()  # Извлекаем все telegram_id в виде списка
+        return telegram_ids  # Возвращаем список telegram_id

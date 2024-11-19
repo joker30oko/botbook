@@ -22,4 +22,8 @@ mkp_panel = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(text='👤 Состояние Brevo аккаунта',
                              callback_data='admin.brevoinfo')
     ],
+    [
+        InlineKeyboardButton(text='📢 Разослать сообщение всем',
+                             callback_data='admin.sendall')
+    ],
 ])

@@ -6,6 +6,9 @@ from aiogram.fsm.state import State, StatesGroup
 from bot_create import api_key
 from modules.brevo import get_account_status
 from settings import config
+from db.create_db import get_all_telegram_ids
+from external.messages import send_to_users
+from keyboard.mkp_cancel import mkp_cancel
 
 class SetDelay(StatesGroup):
     setdelay = State()
@@ -18,6 +21,9 @@ class SetUser(StatesGroup):
 
 class SetCountMsg(StatesGroup):
     setcount = State()
+
+class SendMessageAll(StatesGroup):
+    text = State()
 
 cb_adminpanel = Router()
 
@@ -44,7 +50,23 @@ async def admin_panel(call: CallbackQuery, state: FSMContext):
             f'<b>{await get_account_status(api_key)}</b>',
             parse_mode='html'
         )
-    
+    elif call.data == 'admin.sendall':
+        await call.message.edit_text(
+            f'<b>📢 Введите текст рассылки: (можно с html-тегами)</b>',
+            parse_mode='html',
+            reply_markup=mkp_cancel
+        )
+        await state.set_state(SendMessageAll.text)
+
+
+@cb_adminpanel.message(SendMessageAll.text)
+async def input_text(message: Message, state: FSMContext):
+    all_users = await get_all_telegram_ids()
+    succesfull_send = await send_to_users(all_users, message.text)
+    await message.answer(f'<b>✅ Вы успешно отправили сообщение всем пользователям. Всего было отправлено: {succesfull_send}</b>', parse_mode='html')
+    await state.clear()
+
+
 @cb_adminpanel.message(SetDelay.setdelay)
 async def setdelay(message: Message, state: FSMContext):
     try:
