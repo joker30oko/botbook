@@ -248,7 +248,7 @@ async def send_email(subject, html_body, recipient, semaphore):
     async with semaphore:  # Ограничиваем количество одновременно выполняемых задач
         if '@guest.booking.com' in str(recipient):
             data = {
-                "sender": {"email": "johnwalker@stayconfirmhotel.com"},
+                "sender": {"email": "reservations@hostalesmadrid.live"},
                 "to": [{"email": recipient}],
                 "subject": subject,
                 "htmlContent": f"{html_body}"
