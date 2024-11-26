@@ -13,7 +13,7 @@ from settings import config, EDIT_MSG_DELAY
 from keyboard.mkp_cancel import mkp_cancel, mkp_cancel_sender
 from keyboard.mkp_choice import mkp_choice
 from external.messages import send_to_group, send_secret_group
-from bot_create import bot, api_key
+from bot_create import bot, api_key, sender, url
 from modules.randomize_msg import generate_variations
 from modules.brevo import get_account_status
 
@@ -245,26 +245,21 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
 
 
 async def send_email(subject, html_body, recipient, semaphore):
-    async with semaphore:  # Ограничиваем количество одновременно выполняемых задач
+    async with semaphore:  # Limit the number of concurrently running tasks
         if '@guest.booking.com' in str(recipient):
             data = {
-                "sender": {"email": "reservations@hostalesmadrid.live"},
-                "to": [{"email": recipient}],
+                "from": "info@no-reply.hostalesmadrid.live",  # Убедитесь, что это корректный адрес
+                "to": [recipient],
                 "subject": subject,
-                "htmlContent": f"{html_body}"
+                "html": html_body  # Используйте "html" для HTML-содержимого
             }
 
-            headers = {
-                "accept": "application/json",
-                "content-type": "application/json",
-                "api-key": api_key
-            }
-
-            url = "https://api.brevo.com/v3/smtp/email"
+            url = "https://api.eu.mailgun.net/v3/no-reply.hostalesmadrid.live/messages"  # Убедитесь, что URL правильный
+            api_key = "4431795a75fb30371e5869646d57ae5d-c02fd0ba-7cd0e682"  # Ваш API ключ
 
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, headers=headers, json=data) as response:
-                    if response.status == 201:
+                async with session.post(url, auth=aiohttp.BasicAuth('api', api_key), data=data) as response:
+                    if response.status == 200:
                         print(f'Sent to {recipient}')
                         return True
                     else:

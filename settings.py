@@ -6,7 +6,7 @@ MSG_FATAL_ERRORS = ['5.7.9 Please log in with your web browser and then try agai
 class BotConfig():
     def __init__(self, delay=0):
         self.delay = delay
-        self.admins = [7777020653]
+        self.admins = [6938188445]
         self.users = []
         self.count_messages = 300
         self.generation = False
