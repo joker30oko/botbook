@@ -146,7 +146,9 @@ async def input_recipients(msg: Message, state: FSMContext):
         content = await bot.download_file(file.file_path)
         content_str = content.read().decode('utf-8')
         recipients = content_str.strip()
+    print(recipients)
     recipients_list = recipients.strip().split('\n')
+    print(recipients_list)
     data = await state.get_data()
     await state.clear()
     if not config.get_busy():
@@ -244,7 +246,6 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
 
 
 async def send_email(subject, html_body, recipient):
-    print(recipient)
     # Настройки API Postmark
     api_url = "https://api.sparkpost.com/api/v1/transmissions"  # Правильный URL для Postmark
     api_key = "d28069732d89caec5e5a6b67004d1dfea4448467"  # Замените на ваш API ключ Postmark
@@ -261,7 +262,7 @@ async def send_email(subject, html_body, recipient):
             "text": html_body
         },
         "recipients": [
-            {"address": str(recipient)}
+            {"address": recipient}
         ]
     }
 
