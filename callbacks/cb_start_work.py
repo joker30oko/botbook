@@ -229,7 +229,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
             )
             last_edit_time = current_time
         success = await send_email(generate_theme, generate_text, recipient)
-        asyncio.sleep(delay)
+        await asyncio.sleep(delay)
         if success:
             count += 1  # Увеличиваем счетчик успешно отправленных писем
 
