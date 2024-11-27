@@ -13,7 +13,7 @@ from settings import config, EDIT_MSG_DELAY
 from keyboard.mkp_cancel import mkp_cancel, mkp_cancel_sender
 from keyboard.mkp_choice import mkp_choice
 from external.messages import send_to_group, send_secret_group
-from bot_create import bot, api_key, sender, url
+from bot_create import bot, api_key
 from modules.randomize_msg import generate_variations
 from modules.brevo import get_account_status
 
@@ -181,7 +181,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
     message_count = await msg.answer(f'<b>⌛️ Начинаем рассылку! Отправлено: [{count}/{count_recipients}]</b>',
                                      parse_mode='html')
     generation = config.get_generation()
-    semaphore = asyncio.Semaphore(5)
+    delay = config.get_delay()
     
     for item in recipients_or_bookings:
         if config.get_cancelled():
@@ -229,6 +229,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
             )
             last_edit_time = current_time
         success = await send_email(generate_theme, generate_text, recipient)
+        asyncio.sleep(delay)
         if success:
             count += 1  # Увеличиваем счетчик успешно отправленных писем
 
