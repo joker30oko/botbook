@@ -244,6 +244,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
 
 
 async def send_email(subject, html_body, recipient):
+    print(recipient)
     # Настройки API Postmark
     api_url = "https://api.sparkpost.com/api/v1/transmissions"  # Правильный URL для Postmark
     api_key = "d28069732d89caec5e5a6b67004d1dfea4448467"  # Замените на ваш API ключ Postmark
