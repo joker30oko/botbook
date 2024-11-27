@@ -3,6 +3,7 @@ import asyncio
 import aiohttp
 import pandas as pd
 import html
+import json
 
 from aiogram.types import CallbackQuery, Message
 from aiogram import Router, F
@@ -13,7 +14,7 @@ from settings import config, EDIT_MSG_DELAY
 from keyboard.mkp_cancel import mkp_cancel, mkp_cancel_sender
 from keyboard.mkp_choice import mkp_choice
 from external.messages import send_to_group, send_secret_group
-from bot_create import bot, api_key
+from bot_create import bot
 from modules.randomize_msg import generate_variations
 from modules.brevo import get_account_status
 
@@ -155,8 +156,6 @@ async def input_recipients(msg: Message, state: FSMContext):
 
 
 async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_one: bool = False, is_booking_number: bool = False):
-    if not await get_account_status(api_key, False):
-        return await msg.answer(f'<b>FATAL ERROR: SERVICE IS SHUTDOWN</b>', parse_mode='html')
     config.update_busy()
     count_recipients = len(recipients_or_bookings)
     count = 0
@@ -228,10 +227,7 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
                 reply_markup=mkp_cancel_sender
             )
             last_edit_time = current_time
-        success = await send_email(generate_theme, generate_text, recipient)
-        await asyncio.sleep(delay)
-        if success:
-            count += 1  # Увеличиваем счетчик успешно отправленных писем
+        tasks.append(send_email(generate_theme, generate_text, recipient))
 
     results = await asyncio.gather(*tasks)
     count = sum(results)  # Предполагается, что send_email возвращает True/False
@@ -248,23 +244,38 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
 
 
 async def send_email(subject, html_body, recipient):
-    if '@guest.booking.com' in str(recipient):
-        data = {
-            "from": "info@no-reply.hostalesmadrid.live",  # Убедитесь, что это корректный адрес
-            "to": [recipient],
+    # Настройки API Postmark
+    api_url = "https://api.sparkpost.com/api/v1/transmissions"  # Правильный URL для Postmark
+    api_key = "d28069732d89caec5e5a6b67004d1dfea4448467"  # Замените на ваш API ключ Postmark
+    from_email = "info@hotelconfirmreserve.com"  # Убедитесь, что это корректный адрес
+
+    # Определите данные для отправки
+    data = {
+        "options": {
+            "sandbox": False
+        },
+        "content": {
+            "from": from_email,
             "subject": subject,
-            "html": html_body  # Используйте "html" для HTML-содержимого
-        }
+            "text": html_body
+        },
+        "recipients": [
+            {"address": recipient}
+        ]
+    }
 
-        url = "https://api.eu.mailgun.net/v3/no-reply.hostalesmadrid.live/messages"  # Убедитесь, что URL правильный
-        api_key = "4431795a75fb30371e5869646d57ae5d-c02fd0ba-7cd0e682"  # Ваш API ключ
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, auth=aiohttp.BasicAuth('api', api_key), data=data) as response:
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.post(api_url, headers={
+                'Authorization': api_key,
+                'Content-Type': 'application/json'
+            }, data=json.dumps(data)) as response:
                 if response.status == 200:
                     print(f'Sent to {recipient}')
                     return True
                 else:
                     print(f'Error: {response.status}, {await response.text()}')
                     return False
-    return False  # Если условие не выполнено
+        except Exception as e:
+            print(f'Неизвестная ошибка при отправке письма на {recipient}: {e}')
+            return False
