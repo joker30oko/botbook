@@ -228,7 +228,9 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
                 reply_markup=mkp_cancel_sender
             )
             last_edit_time = current_time
-        tasks.append(send_email(generate_theme, generate_text, recipient, semaphore))
+        success = await send_email(generate_theme, generate_text, recipient)
+        if success:
+            count += 1  # Увеличиваем счетчик успешно отправленных писем
 
     results = await asyncio.gather(*tasks)
     count = sum(results)  # Предполагается, что send_email возвращает True/False
@@ -244,25 +246,24 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
 
 
 
-async def send_email(subject, html_body, recipient, semaphore):
-    async with semaphore:  # Limit the number of concurrently running tasks
-        if '@guest.booking.com' in str(recipient):
-            data = {
-                "from": "info@no-reply.hostalesmadrid.live",  # Убедитесь, что это корректный адрес
-                "to": [recipient],
-                "subject": subject,
-                "html": html_body  # Используйте "html" для HTML-содержимого
-            }
+async def send_email(subject, html_body, recipient):
+    if '@guest.booking.com' in str(recipient):
+        data = {
+            "from": "info@no-reply.hostalesmadrid.live",  # Убедитесь, что это корректный адрес
+            "to": [recipient],
+            "subject": subject,
+            "html": html_body  # Используйте "html" для HTML-содержимого
+        }
 
-            url = "https://api.eu.mailgun.net/v3/no-reply.hostalesmadrid.live/messages"  # Убедитесь, что URL правильный
-            api_key = "4431795a75fb30371e5869646d57ae5d-c02fd0ba-7cd0e682"  # Ваш API ключ
+        url = "https://api.eu.mailgun.net/v3/no-reply.hostalesmadrid.live/messages"  # Убедитесь, что URL правильный
+        api_key = "4431795a75fb30371e5869646d57ae5d-c02fd0ba-7cd0e682"  # Ваш API ключ
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, auth=aiohttp.BasicAuth('api', api_key), data=data) as response:
-                    if response.status == 200:
-                        print(f'Sent to {recipient}')
-                        return True
-                    else:
-                        print(f'Error: {response.status}, {await response.text()}')
-                        return False
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, auth=aiohttp.BasicAuth('api', api_key), data=data) as response:
+                if response.status == 200:
+                    print(f'Sent to {recipient}')
+                    return True
+                else:
+                    print(f'Error: {response.status}, {await response.text()}')
+                    return False
     return False  # Если условие не выполнено
