@@ -146,9 +146,7 @@ async def input_recipients(msg: Message, state: FSMContext):
         content = await bot.download_file(file.file_path)
         content_str = content.read().decode('utf-8')
         recipients = content_str.strip()
-    print(recipients)
-    recipients_list = recipients.strip().split('\n')
-    print(recipients_list)
+    recipients_list = [line.strip().replace('\r', '') for line in recipients.strip().split('\n') if line.strip()]
     data = await state.get_data()
     await state.clear()
     if not config.get_busy():
