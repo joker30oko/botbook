@@ -261,7 +261,7 @@ async def send_email(subject, html_body, recipient):
             "text": html_body
         },
         "recipients": [
-            {"address": recipient}
+            {"address": str(recipient)}
         ]
     }
 
