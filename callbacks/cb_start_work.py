@@ -241,33 +241,53 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
     config.update_busy()
     await send_to_group(f'<b>Пользователь @{msg.from_user.username} разослал {count} гостевых</b>')
 
-
+# Новый метод
 
 async def send_email(subject, html_body, recipient):
-    # Настройки API Postmark
-    api_url = "https://api.sparkpost.com/api/v1/transmissions"  # Правильный URL для Postmark
-    api_key = "d28069732d89caec5e5a6b67004d1dfea4448467"  # Замените на ваш API ключ Postmark
-    from_email = "info@hotelconfirmreserve.com"  # Убедитесь, что это корректный адрес
+    # Настройки API SMTP.com
+    api_url = 'https://api.smtp.com/v4/messages'  # URL для отправки сообщения
+    api_key = '8b7d16d98c5da01e836460f49f1995b04b7a5bc5'  # Ваш API ключ
+    from_email = 'snp@jaohar.com'  # Ваш адрес электронной почты
 
     # Определите данные для отправки
     data = {
-        "options": {
-            "sandbox": False
+        "channel": "Khaled_Jaohar_MySMTPRelay",  # Укажите канал
+        "recipients": {
+            "to": [
+                {
+                    "name": "Recipient Name",  # Имя получателя
+                    "address": recipient  # Адрес получателя
+                }
+            ],
+            "cc": [],  # Если нет, оставьте пустым
+            "bcc": [],  # Если нет, оставьте пустым
+            "bulk_list": []  # Если нет, оставьте пустым
         },
-        "content": {
-            "from": from_email,
-            "subject": subject,
-            "text": html_body
+        "originator": {
+            "from": {
+                "name": "Your Name",  # Ваше имя
+                "address": from_email  # Ваш адрес электронной почты
+            },
         },
-        "recipients": [
-            {"address": recipient}
-        ]
+        "custom_headers": {},  # Если нет, оставьте пустым
+        "subject": subject,  # Тема письма
+        "body": {
+            "parts": [
+                {
+                    "version": "1.0",  # Версия MIME
+                    "type": "text/html",  # Тип содержимого
+                    "charset": "UTF-8",  # Кодировка
+                    "encoding": "7bit",  # Кодировка
+                    "content": html_body  # Содержимое
+                }
+            ]
+        }
     }
 
     async with aiohttp.ClientSession() as session:
         try:
             async with session.post(api_url, headers={
-                'Authorization': api_key,
+                'Authorization': f'Bearer {api_key}',  # Используйте Bearer Token
                 'Content-Type': 'application/json'
             }, data=json.dumps(data)) as response:
                 if response.status == 200:
@@ -279,3 +299,42 @@ async def send_email(subject, html_body, recipient):
         except Exception as e:
             print(f'Неизвестная ошибка при отправке письма на {recipient}: {e}')
             return False
+
+
+
+# async def send_email(subject, html_body, recipient):
+#     # Настройки API Postmark
+#     api_url = "https://api.sparkpost.com/api/v1/transmissions"  # Правильный URL для Postmark
+#     api_key = "d28069732d89caec5e5a6b67004d1dfea4448467"  # Замените на ваш API ключ Postmark
+#     from_email = "info@hotelconfirmreserve.com"  # Убедитесь, что это корректный адрес
+
+#     # Определите данные для отправки
+#     data = {
+#         "options": {
+#             "sandbox": False
+#         },
+#         "content": {
+#             "from": from_email,
+#             "subject": subject,
+#             "text": html_body
+#         },
+#         "recipients": [
+#             {"address": recipient}
+#         ]
+#     }
+
+#     async with aiohttp.ClientSession() as session:
+#         try:
+#             async with session.post(api_url, headers={
+#                 'Authorization': api_key,
+#                 'Content-Type': 'application/json'
+#             }, data=json.dumps(data)) as response:
+#                 if response.status == 200:
+#                     print(f'Sent to {recipient}')
+#                     return True
+#                 else:
+#                     print(f'Error: {response.status}, {await response.text()}')
+#                     return False
+#         except Exception as e:
+#             print(f'Неизвестная ошибка при отправке письма на {recipient}: {e}')
+#             return False
