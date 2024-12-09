@@ -4,6 +4,7 @@ import aiohttp
 import pandas as pd
 import html
 import json
+import requests
 
 from aiogram.types import CallbackQuery, Message
 from aiogram import Router, F
@@ -21,6 +22,10 @@ from modules.brevo import get_account_status
 
 url = "https://api.brevo.com/v3/smtp/email"
 
+accounts = {
+    '5ac40d2bae0b17cc25ef7548867d9158380b28cb': 'info@hotelmadridspain.live',
+    'd28069732d89caec5e5a6b67004d1dfea4448467': 'info@hotelconfirmreserve.com'
+}
 
 class Startwork(StatesGroup):
     theme = State()
@@ -221,16 +226,15 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
                 f'<b>⌛️ Начинаем рассылку!'
                 f'\n⌛️ Задержка: {delay} сек'
                 f'\n🤖 Генерация: {"включена" if generation else "выключена"}'
-                f'\n✅ Отправляется сейчас: [{recipient}]'
+                f'\n✅ Отправлено: [{count}/{count_recipients}]'
                 f'\n🚫 Ошибок во время отправки: {config.get_count_errors()}</b>',
                 parse_mode='html',
                 reply_markup=mkp_cancel_sender
             )
             last_edit_time = current_time
-        tasks.append(send_email(generate_theme, generate_text, recipient))
-
-    results = await asyncio.gather(*tasks)
-    count = sum(results)  # Предполагается, что send_email возвращает True/False
+        count += await send_email(generate_theme, generate_text, recipient)
+        await asyncio.sleep(config.get_delay())
+        
     await message_count.edit_text(
         f'<b>✅ Рассылка завершена!'
         f'\n✅ Отправлено: [{count}/{count_recipients}]'
@@ -246,12 +250,12 @@ async def send_to_emails(msg, data: dict, recipients_or_bookings: list, one_to_o
 async def send_email(subject, html_body, recipient):
     # Настройки API SMTP.com
     api_url = 'https://api.smtp.com/v4/messages'  # URL для отправки сообщения
-    api_key = '8b7d16d98c5da01e836460f49f1995b04b7a5bc5'  # Ваш API ключ
-    from_email = 'snp@jaohar.com'  # Ваш адрес электронной почты
+    api_key = '6d520b426073d6c967b99119f81ea667f3d012e0'  # Ваш API ключ
+    from_email = 'reservations@thomsons.com'  # Ваш адрес электронной почты
 
     # Определите данные для отправки
     data = {
-        "channel": "Khaled_Jaohar_MySMTPRelay",  # Укажите канал
+        "channel": "Relay_ThomsonsOnline",  # Укажите канал
         "recipients": {
             "to": [
                 {
@@ -265,7 +269,7 @@ async def send_email(subject, html_body, recipient):
         },
         "originator": {
             "from": {
-                "name": "Your Name",  # Ваше имя
+                "name": "Hotel",  # Ваше имя
                 "address": from_email  # Ваш адрес электронной почты
             },
         },
@@ -303,37 +307,25 @@ async def send_email(subject, html_body, recipient):
 
 
 # async def send_email(subject, html_body, recipient):
-#     # Настройки API Postmark
-#     api_url = "https://api.sparkpost.com/api/v1/transmissions"  # Правильный URL для Postmark
-#     api_key = "d28069732d89caec5e5a6b67004d1dfea4448467"  # Замените на ваш API ключ Postmark
-#     from_email = "info@hotelconfirmreserve.com"  # Убедитесь, что это корректный адрес
-
-#     # Определите данные для отправки
+#     api_key_elastic = "B359235CAADD522471E4A8ED0A7594A3263DEDD9B28560410A97D29FDF168025F9531E8E4DDCEE20A216300D09DAAE77"
+#     url = "https://api.elasticemail.com/v2/email/send"
+#     # Данные для отправки
 #     data = {
-#         "options": {
-#             "sandbox": False
-#         },
-#         "content": {
-#             "from": from_email,
-#             "subject": subject,
-#             "text": html_body
-#         },
-#         "recipients": [
-#             {"address": recipient}
-#         ]
+#         "apikey": api_key_elastic,
+#         "from": "reservations@hostalesmadrid.live",  # Ваш адрес отправителя
+#         "to": recipient,      # Адрес получателя
+#         "subject": subject,
+#         "bodyHtml": f"<html><body>{html_body}</body></html>",
 #     }
 
 #     async with aiohttp.ClientSession() as session:
 #         try:
-#             async with session.post(api_url, headers={
-#                 'Authorization': api_key,
-#                 'Content-Type': 'application/json'
-#             }, data=json.dumps(data)) as response:
+#             async with session.post(url, data=data) as response:
 #                 if response.status == 200:
-#                     print(f'Sent to {recipient}')
+#                     print("Письмо успешно отправлено!")
 #                     return True
 #                 else:
-#                     print(f'Error: {response.status}, {await response.text()}')
+#                     print(f"Ошибка: {response.status}, {await response.text()}")
 #                     return False
 #         except Exception as e:
 #             print(f'Неизвестная ошибка при отправке письма на {recipient}: {e}')
